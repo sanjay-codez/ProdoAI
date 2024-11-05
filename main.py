@@ -11,6 +11,202 @@ from tkinter import messagebox
 from datetime import datetime, timedelta
 import tkinter.messagebox as messagebox
 
+import useful_methods
+
+class ReflectiveJournal:
+    def __init__(self, parent):
+        self.parent = parent
+        self.entries = {}  # Dictionary to store entries by day
+        self.current_entry_key = None  # Tracks the current entry being edited
+        self.max_title_length = 15  # Maximum length for title display in Treeview
+        self.create_journal_interface()
+
+        # Add a default entry at startup
+        self.create_default_entry()
+
+    def create_default_entry(self):
+        """Creates a default entry to ensure there's always an entry at startup."""
+        if not self.entries:
+            print("Creating default entry at startup...")
+            default_key = "Day 1"
+            self.entries[default_key] = {"title": "Default Entry", "content": "This is a default journal entry.",
+                                         "date": datetime.now().strftime("%Y-%m-%d")}
+            self.current_entry_key = default_key
+            self.refresh_entry_table()
+            self.load_selected_entry_from_key(default_key)
+            print(f"Default entry created with key: {self.current_entry_key}")
+
+    def create_journal_interface(self):
+        # Title for Reflective Journal
+        journal_title = ctk.CTkLabel(self.parent, text="Reflective Journal", font=("Arial", 24, "bold"),
+                                     text_color="white")
+        journal_title.pack(pady=10)
+
+        # Style for Treeview (Purple Theme)
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure("Purple.Treeview",
+                        background="#2E2E2E",  # Dark background
+                        foreground="white",  # White text
+                        rowheight=25,
+                        fieldbackground="#2E2E2E")  # Same background color as cells
+        style.map("Purple.Treeview",
+                  background=[("selected", "#9932CC")],  # Purple selection
+                  foreground=[("selected", "white")])
+
+        style.configure("Purple.Treeview.Heading",
+                        background="#9932CC",  # Purple header
+                        foreground="white",  # White header text
+                        font=("Arial", 12, "bold"))
+
+        # Table for Entries
+        self.entry_table_frame = ctk.CTkFrame(self.parent)
+        self.entry_table_frame.pack(fill="x", padx=10, pady=5)
+
+        columns = ("Title", "Date")
+        self.entry_table = ttk.Treeview(self.entry_table_frame, columns=columns, show="headings", height=8,
+                                        style="Purple.Treeview")
+        self.entry_table.heading("Title", text="Title")
+        self.entry_table.heading("Date", text="Date")
+        self.entry_table.column("Title", width=300, anchor="w")
+        self.entry_table.column("Date", width=100, anchor="center")
+        self.entry_table.bind("<<TreeviewSelect>>", self.load_selected_entry)
+        self.entry_table.pack(fill="x", expand=True, side="left")
+
+        # Scrollbar for Treeview
+        table_scrollbar = ttk.Scrollbar(self.entry_table_frame, orient="vertical", command=self.entry_table.yview)
+        table_scrollbar.pack(side="right", fill="y")
+        self.entry_table.configure(yscrollcommand=table_scrollbar.set)
+
+        # Editor Panel for Journal Entries
+        self.editor_frame = ctk.CTkFrame(self.parent)
+        self.editor_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Editor Title
+        self.editor_title_label = ctk.CTkLabel(self.editor_frame, text="Entry Title", font=("Arial", 16, "bold"),
+                                               text_color="white")
+        self.editor_title_label.pack(pady=5)
+
+        self.entry_title = ctk.CTkEntry(self.editor_frame, placeholder_text="Entry Title", width=400, fg_color="black",
+                                        text_color="white")
+        self.entry_title.pack(pady=5)
+
+        # Scrollable Textbox for Content
+        self.editor_textbox = tk.Text(self.editor_frame, wrap="word", font=("Arial", 12), bg="black", fg="white",
+                                      height=10)
+        self.editor_textbox.pack(fill="both", expand=True, padx=5, pady=10)
+
+        # Button Frame for Add, Save, and Delete
+        button_frame = tk.Frame(self.editor_frame, bg="#2E2E2E")
+        button_frame.pack(pady=10)
+
+        # Add New Entry Button
+        self.add_button = ctk.CTkButton(button_frame, text="Add New Entry", command=self.create_new_entry,
+                                        fg_color="#4CAF50", hover_color="#388E3C", text_color="white")
+        self.add_button.pack(side="left", padx=10)
+
+        # Save Entry Button
+        self.save_button = ctk.CTkButton(button_frame, text="Save Entry", command=self.save_entry,
+                                         fg_color="#9932CC", hover_color="#800080", text_color="white")
+        self.save_button.pack(side="left", padx=10)
+
+        # Delete Entry Button
+        self.delete_button = ctk.CTkButton(button_frame, text="Delete Entry", command=self.delete_entry,
+                                           fg_color="#CC3333", hover_color="#AA0000", text_color="white")
+        self.delete_button.pack(side="left", padx=10)
+
+    def truncate_title(self, title):
+        """Truncate the title if it exceeds max length."""
+        if len(title) > self.max_title_length:
+            return title[:self.max_title_length] + "..."
+        return title
+
+    def create_new_entry(self):
+        """Create a new entry for the journal and add it to the table."""
+        new_entry_key = f"Day {len(self.entries) + 1}"
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+        # Add the new entry to the entries dictionary
+        self.entries[new_entry_key] = {"title": new_entry_key, "content": "", "date": date_str}
+
+        # Set the current entry key to the new entry
+        self.current_entry_key = new_entry_key
+        print(f"New entry created with key {self.current_entry_key}")
+
+        # Refresh the table to show the new entry
+        self.refresh_entry_table()
+
+        # Automatically load the new entry into the editor
+        self.load_selected_entry_from_key(new_entry_key)
+
+    def load_selected_entry_from_key(self, entry_key):
+        """Load an entry directly from a key into the editor."""
+        entry = self.entries.get(entry_key)
+        if not entry:
+            return
+
+        self.current_entry_key = entry_key
+
+        # Populate the editor with the entry's data
+        self.entry_title.delete(0, "end")
+        self.entry_title.insert("end", entry["title"])
+
+        self.editor_textbox.delete("1.0", "end")
+        self.editor_textbox.insert("1.0", entry["content"])
+
+    def load_selected_entry(self, event=None):
+        """Load the selected entry from the Treeview into the editor."""
+        selected_item = self.entry_table.selection()
+        if not selected_item:
+            return
+
+        # Get the entry key from the Treeview selection
+        selected_key = selected_item[0]  # 'iid' of the selected item in Treeview is the entry key
+        self.load_selected_entry_from_key(selected_key)
+
+    def save_entry(self):
+        """Save the current entry and update the table if needed."""
+        # Retrieve updated title and content from the editor
+        title = self.entry_title.get().strip()
+        content = self.editor_textbox.get("1.0", "end-1c").strip()
+
+        # Check if there’s anything to save
+        if not title and not content:
+            print("Both title and content are empty, not saving.")
+            return
+
+        # Update the entry in the dictionary
+        date_str = datetime.now().strftime("%Y-%m-%d")  # Set the current date
+        self.entries[self.current_entry_key] = {"title": title, "content": content, "date": date_str}
+
+        print(f"Saved entry with key {self.current_entry_key}: {self.entries[self.current_entry_key]}")
+        self.refresh_entry_table()  # Update table to reflect latest entries
+
+    def delete_entry(self):
+        """Delete the current entry."""
+        if not self.current_entry_key:
+            return
+
+        # Remove from entries and refresh list
+        del self.entries[self.current_entry_key]
+        self.current_entry_key = None
+        self.entry_title.delete(0, "end")
+        self.editor_textbox.delete("1.0", "end")
+        self.refresh_entry_table()
+
+    def refresh_entry_table(self):
+        """Refresh the Treeview table to reflect the current entries in the dictionary."""
+        # Clear all items from the Treeview first
+        self.entry_table.delete(*self.entry_table.get_children())
+
+        # Loop through entries and add each one to the Treeview
+        for key, entry in sorted(self.entries.items(), reverse=True):
+            title = self.truncate_title(entry["title"])
+            date_str = entry["date"]
+
+            # Insert each entry into the Treeview
+            self.entry_table.insert("", "end", iid=key, values=(title, date_str))
+            print(f"Inserted entry with key {key} into Treeview: Title='{title}', Date='{date_str}'")
 
 class MonthlyCalendar:
     def __init__(self, parent):
@@ -182,6 +378,7 @@ class ProdoAIApp(ctk.CTk):
         )
         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         self.schedule_initialized = False
+        self.journal_initialized = False
         # Load icons
         self.icons = {
             "dashboard": ctk.CTkImage(Image.open("icons/1.png"), size=(50, 50)),
@@ -332,7 +529,14 @@ class ProdoAIApp(ctk.CTk):
         self.show_frame(self.profile_settings_frame)
 
     def show_journal(self):
+        """Displays the Reflective Journal frame with the journal UI populated."""
         self.show_frame(self.journal_frame)
+        if not self.journal_initialized:
+            self.populate_reflective_journal()  # Ensure the journal is populated once
+            # Set the current entry key to the first entry
+            self.current_entry_key = next(iter(self.entries))
+            print(f"Set current entry key on journal load: {self.current_entry_key}")
+            self.journal_initialized = True
 
     def populate_dashboard(self):
         """Adds unique widgets to the dashboard frame to make it scrollable."""
@@ -707,7 +911,19 @@ class ProdoAIApp(ctk.CTk):
         # Initialize and display the monthly calendar
         MonthlyCalendar(calendar_frame)
 
+    # Usage in your main app
+    def populate_reflective_journal(self):
+        """Creates a complex Reflective Journal interface with day-based entries."""
+        if not self.journal_initialized:
+            # Initialize Reflective Journal only if it hasn't been created already
+            self.journal_frame.pack(fill="both", expand=True, padx=10, pady=10)
+            self.journal = ReflectiveJournal(self.journal_frame)
+            self.journal_initialized = True  # Set flag to prevent re-initialization
 
+    def show_journal(self):
+        """Displays the Reflective Journal frame with the journal UI populated."""
+        self.show_frame(self.journal_frame)
+        self.populate_reflective_journal()  # Ensure the journal is populated once
 # Run the application
 if __name__ == "__main__":
     app = ProdoAIApp()

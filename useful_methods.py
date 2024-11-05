@@ -1,6 +1,8 @@
 import win32com.client
 import threading
-
+import customtkinter as ctk
+import tkinter as tk
+from datetime import datetime
 
 class SpeechThread(threading.Thread):
     def __init__(self, text):
@@ -22,4 +24,8 @@ import customtkinter as ctk
 from PIL import Image
 
 
+import customtkinter as ctk
+import tkinter as tk
+from tkinter import ttk
+from datetime import datetime
 
