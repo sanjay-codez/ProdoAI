@@ -3,29 +3,29 @@ from PIL import Image
 
 # Configure CustomTkinter appearance
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("dark-blue")
+
 
 # Main application window
 class ProductivityApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Productivity App")
+        self.configure(fg_color="#0b0b38")
 
-        self.after(0, lambda:self.state('zoomed'))
+        self.after(0, lambda: self.state('zoomed'))  # Start in a maximized window
 
         # Configure grid layout for the main app
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, minsize=300)  # Explicitly set the sidebar width to 400px
-        self.grid_columnconfigure(1, weight=1)  # Main content takes up remaining space
+        self.grid_columnconfigure(0, minsize=300)  # Sidebar width explicitly set
+        self.grid_columnconfigure(1, weight=1)     # Main content area
 
         # Load icons from the specified path
-        self.icons = [self.load_icon(f"icons/{i}.png") for i in range(1, 7)]
+        self.icons = [self.load_icon(f"icons/{i}.png") for i in range(1, 8)]  # Update to include icon for Chatbot
 
         # Sidebar Frame
-        self.sidebar = ctk.CTkFrame(self, corner_radius=0, fg_color="gray20")
+        self.sidebar = ctk.CTkFrame(self, corner_radius=0, fg_color="#0b0b38")
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_columnconfigure(0, weight=1)  # Make the column expandable
-        self.sidebar.grid_rowconfigure(6, weight=1)  # Add space at the bottom for alignment
+        self.sidebar.grid_columnconfigure(0, weight=1)  # Buttons fill the sidebar width
 
         # Sidebar Buttons
         self.sidebar_buttons = [
@@ -35,6 +35,7 @@ class ProductivityApp(ctk.CTk):
             ("Notifications", self.load_notifications, self.icons[3]),
             ("Progress Tracker", self.load_progress_tracker, self.icons[4]),
             ("Settings", self.load_settings, self.icons[5]),
+            ("Chatbot", self.load_chatbot, self.icons[6]),  # New "Chatbot" button
         ]
 
         for idx, (name, command, icon) in enumerate(self.sidebar_buttons):
@@ -44,15 +45,15 @@ class ProductivityApp(ctk.CTk):
                 command=command,
                 image=icon,
                 compound="left",
-                hover_color="lightgrey",
-                fg_color="gray20",  # Matches sidebar background
+                hover_color="#13134a",
+                fg_color="#0b0b38",  # Matches sidebar background
                 text_color="white",
                 font=ctk.CTkFont(size=18, weight="bold"),
-                corner_radius=0,  # Square buttons
+                corner_radius=15,  # Square buttons
                 anchor="w",  # Align text and icon to the left
-                width=300  # Set a fixed width for the buttons
+                width=300  # Ensures consistent width
             )
-            button.grid(row=idx, column=0, pady=10, padx=10, sticky="ew")  # Added padx for spacing
+            button.grid(row=idx, column=0, pady=10, padx=10, sticky="ew")  # Aligns buttons to fill the sidebar
 
         # Header Section
         self.header = ctk.CTkLabel(
@@ -60,16 +61,32 @@ class ProductivityApp(ctk.CTk):
         )
         self.header.grid(row=0, column=1, sticky="n", pady=20)
 
-        # Main Frame
-        self.main_frame = ctk.CTkFrame(self, corner_radius=15)
-        self.main_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        # Create a container frame first
+        self.main_frame_container = ctk.CTkFrame(
+            self,
+            fg_color="#0b0b38",  # Match the background color or choose another color
+            corner_radius=15
+        )
+        self.main_frame_container.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        self.main_frame_container.grid_rowconfigure(0, weight=1)
+        self.main_frame_container.grid_columnconfigure(0, weight=1)
 
-        # Placeholder for main content
-        self.content_label = ctk.CTkLabel(self.main_frame, text="Welcome to the Dashboard!")
-        self.content_label.pack(pady=20)
+        # Create the scrollable frame inside the container
+        self.main_frame = ctk.CTkScrollableFrame(
+            self.main_frame_container,
+            fg_color="#13134a",  # Change this to your desired color
+            corner_radius=15,
+            scrollbar_button_color="#1a1b4b",  # Customize scrollbar button color
+            scrollbar_button_hover_color="#2a2b6b"  # Customize scrollbar hover color
+        )
+        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        self.update_main_content("Dashboard")
+
+
 
     def load_icon(self, path):
-        # Load and resize icons (increased size to 40x40)
+        # Load and resize icons (adjusted size for uniform appearance)
         return ctk.CTkImage(Image.open(path), size=(100, 100))
 
     # Sidebar Button Commands
@@ -91,12 +108,18 @@ class ProductivityApp(ctk.CTk):
     def load_settings(self):
         self.update_main_content("Settings")
 
+    def load_chatbot(self):
+        self.update_main_content("Chatbot")  # Placeholder for chatbot functionality
+
     def update_main_content(self, content):
         for widget in self.main_frame.winfo_children():
             widget.destroy()
-        ctk.CTkLabel(self.main_frame, text=f"Welcome to {content}!").pack(pady=20)
-
-
+        ctk.CTkLabel(
+            self.main_frame,
+            text=f"Welcome to {content}!",
+            font=ctk.CTkFont(size=42, weight="bold"),  # Larger size and bold
+            text_color="white"  # White text color
+        ).pack(pady=30)  # Increased padding for better spacing
 
 
 if __name__ == "__main__":
