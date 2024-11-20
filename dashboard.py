@@ -37,6 +37,10 @@ class ProductivityApp(ctk.CTk):
             ("Settings", self.load_settings, self.icons[5]),
             ("Chatbot", self.load_chatbot, self.icons[6]),  # New "Chatbot" button
         ]
+        # Add App Logo at the top of the sidebar
+        app_logo = ctk.CTkImage(Image.open("icons/app_logo.png"), size=(275, 125))  # Resize the logo
+        logo_label = ctk.CTkLabel(self.sidebar, image=app_logo, text="")  # Add label with the logo
+        logo_label.grid(row=0, column=0, pady=(20, 10), sticky="n")  # Add some padding above the logo
 
         for idx, (name, command, icon) in enumerate(self.sidebar_buttons):
             button = ctk.CTkButton(
@@ -53,7 +57,7 @@ class ProductivityApp(ctk.CTk):
                 anchor="w",  # Align text and icon to the left
                 width=300  # Ensures consistent width
             )
-            button.grid(row=idx, column=0, pady=10, padx=10, sticky="ew")  # Aligns buttons to fill the sidebar
+            button.grid(row=idx + 2, column=0, pady=10, padx=10, sticky="ew")  # Start buttons from row 2
 
         # Header Section
         self.header = ctk.CTkLabel(
@@ -82,16 +86,41 @@ class ProductivityApp(ctk.CTk):
         self.main_frame.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
 
         self.update_main_content("Dashboard")
-
-
+        self.load_dashboard()
 
     def load_icon(self, path):
-        # Load and resize icons (adjusted size for uniform appearance)
-        return ctk.CTkImage(Image.open(path), size=(100, 100))
+        return ctk.CTkImage(Image.open(path), size=(70, 70))  # Adjusted size
 
     # Sidebar Button Commands
     def load_dashboard(self):
         self.update_main_content("Dashboard")
+        # Add sample text below with smaller font
+        ctk.CTkLabel(
+            self.main_frame,
+            text="""
+        Rats are the best
+        Author: Harsika Krishnan
+
+        In my opinion, I think rats are amazing, but many people don’t believe that. Many people have favorite rodents, and mine is a rat. Rats are the best, because they are adorable, easy to take care of, and are harmless. Rats are amazing. Squeak!
+
+        First of all, rats are adorable. They are really fun to play, and rats are cute when they run on their toes in their cage. To add on, these little rats run in a little wheel, and it is adorable! One time, I saw a rat in a cage. It was in a wheel. It was very cute. Plus you can even dress them up like a different animal you like, or even give it a Halloween costume. It would look like a piece of a yarn ball.
+
+        Second, rats are easy to take care of. You have to give it a cage so it won’t escape. You will also have to clean its cage, because it might make a mess. Then you have to give it lots of food or else it will not survive long. Rats are usually looking for something to do. That's when you have to buy it something it can play with. It’s usually found in pet stores. It can be something squishy or something else. They wouldn’t be bored after all! On the other hand, if you give it something it doesn’t like, it will still be bored.
+
+        Finally, rats are harmless. Rats don’t have very long claws. They're just tiny. They are not spiky. Rats are very soft. When I saw a rat it wasn’t spicky. It was so soft. Plus, pet rats don’t usually have diseases! This is important, because if the harmless little rat has diseases it can spread it to humans. Rats can be very different from each other.
+
+        In conclusion, other people should care about this because rats need love and care. Rats are the best type of rodent and you can do so much with it. Rats are adorable, easy to take care of, and are harmless.
+
+
+
+
+
+
+                    """,
+            font=ctk.CTkFont(size=14),  # Smaller font size
+            text_color="light gray",  # Slightly different color for hierarchy
+            wraplength=600  # Wrap text at 600 pixels
+        ).pack(pady=10)
 
     def load_task_manager(self):
         self.update_main_content("Task Manager")
@@ -120,6 +149,9 @@ class ProductivityApp(ctk.CTk):
             font=ctk.CTkFont(size=42, weight="bold"),  # Larger size and bold
             text_color="white"  # White text color
         ).pack(pady=30)  # Increased padding for better spacing
+
+
+
 
 
 if __name__ == "__main__":
