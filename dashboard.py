@@ -182,11 +182,10 @@ class ProductivityApp(ctk.CTk):
         add_class_button.pack(pady=10)
 
         # Display all classes and tasks
-        for class_name in self.task_manager.tasks.keys():
+        for class_name, tasks in self.task_manager.tasks.items():
             self.display_class(class_name)
-            print("Classes loaded from tasks.pkl:", list(self.task_manager.tasks.keys()))
 
-        # Display recently completed tasks
+        # Display Recently Completed Tasks
         self.display_recently_completed_tasks()
 
     def display_recently_completed_tasks(self):
@@ -226,6 +225,8 @@ class ProductivityApp(ctk.CTk):
                 text_color="light gray",
             )
             no_tasks_label.pack(pady=10, padx=20)
+
+
 
     def toggle_tasks(self, class_frame, class_name):
         # Remove existing task frames if already displayed
@@ -288,9 +289,6 @@ class ProductivityApp(ctk.CTk):
         )
         confirm_button.pack(pady=20)
 
-    # def complete_task(self, class_name, task_name):
-    #     if self.task_manager.remove_task(class_name, task_name):  # Remove the task from the backend
-    #         self.load_to_do_list()  # Refresh the UI to reflect the change
     def complete_task(self, class_name, task_name):
         """Mark a task as completed and refresh the UI."""
         if self.task_manager.complete_task(class_name, task_name):  # Use the correct method
