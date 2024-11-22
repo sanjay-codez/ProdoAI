@@ -6,19 +6,22 @@ class TaskManager:
     def __init__(self, file_path="tasks.pkl", completed_tasks_file="completed_tasks.pkl"):
         self.tasks = CustomMap(file_path)
         self.tasks.load()
+        print(f"Tasks loaded: {self.tasks.items()}")  # Debug to confirm data
         self.completed_tasks = Stack()
         self.completed_tasks_file = completed_tasks_file
         self.completed_tasks.load_from_file(self.completed_tasks_file)  # Load completed tasks
 
     def add_class(self, class_name):
-        if class_name not in self.tasks.keys():  # Check if the class exists
+        if class_name not in self.tasks.keys():
             self.tasks.add(class_name, None)
+            self.tasks.save()  # Persist changes immediately
 
     def add_task(self, class_name, task_name, deadline=None):
         task = {"name": task_name, "deadline": str(deadline), "completed": False}
         if not self.tasks.get(class_name):  # Ensure the class exists
             self.add_class(class_name)
         self.tasks.add(class_name, task)
+        self.tasks.save()  # Persist changes immediately
 
     def complete_task(self, class_name, task_name):
         """Mark a task as completed and move it to the recently completed stack."""

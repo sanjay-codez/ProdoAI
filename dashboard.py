@@ -184,6 +184,7 @@ class ProductivityApp(ctk.CTk):
         # Display all classes and tasks
         for class_name in self.task_manager.tasks.keys():
             self.display_class(class_name)
+            print("Classes loaded from tasks.pkl:", list(self.task_manager.tasks.keys()))
 
         # Display recently completed tasks
         self.display_recently_completed_tasks()

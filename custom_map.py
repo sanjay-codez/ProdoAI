@@ -34,8 +34,10 @@ class CustomMap:
                 del self.map[key]
             self.save()
 
+
     def save(self):
         """Save the map to a file using pickle."""
+        print(f"Saving map to {self.file_path}")  # Debug
         serializable_map = {
             key: node.to_list() if isinstance(node, LinkedList) else []
             for key, node in self.map.items()
@@ -45,6 +47,7 @@ class CustomMap:
 
     def load(self):
         """Load the map from a file using pickle."""
+        print(f"Loading map from {self.file_path}")  # Debug
         try:
             with open(self.file_path, "rb") as file:
                 serializable_map = pickle.load(file)
@@ -53,6 +56,7 @@ class CustomMap:
                 for key, values in serializable_map.items()
             }
         except (FileNotFoundError, EOFError):
+            print("File not found or empty, initializing empty map.")  # Debug
             self.map = {}
 
     def keys(self):
