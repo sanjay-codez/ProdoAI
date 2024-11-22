@@ -83,3 +83,21 @@ class TaskManager:
 
         # Convert heap to a sorted list
         return [(item[1], item[2], item[0].strftime("%m/%d/%y %H:%M:%S")) for item in sorted(self.action_items)]
+    def categorize_tasks(self):
+        """Categorize tasks into Overdue, Today's, and Future."""
+        now = datetime.now()
+        categorized_tasks = {"overdue": [], "today": [], "future": []}
+
+        for class_name, tasks in self.tasks.items():
+            for task in tasks:
+                deadline_str = task.get("deadline", None)
+                if deadline_str:
+                    deadline = datetime.strptime(deadline_str, "%m/%d/%y %H:%M:%S")
+                    if deadline.date() < now.date():
+                        categorized_tasks["overdue"].append((task["name"], class_name, deadline_str))
+                    elif deadline.date() == now.date():
+                        categorized_tasks["today"].append((task["name"], class_name, deadline_str))
+                    else:
+                        categorized_tasks["future"].append((task["name"], class_name, deadline_str))
+
+        return categorized_tasks

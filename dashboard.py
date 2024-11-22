@@ -9,6 +9,9 @@ from tkinter import Toplevel
 from tkcalendar import Calendar
 import time
 import array
+from datetime import datetime
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 import matplotlib.pyplot as plt
@@ -114,6 +117,15 @@ class ProductivityApp(ctk.CTk):
         task_counts = self.task_manager.get_task_counts()
         open_tasks, closed_tasks = task_counts[0][1], task_counts[1][1]
 
+
+        # Task Categories
+        categorized_tasks = self.task_manager.categorize_tasks()
+        self.display_task_category("Overdue Tasks", categorized_tasks["overdue"], "#ff6666")  # Red
+        self.display_task_category("Today's Tasks", categorized_tasks["today"], "#ffff66")  # Yellow
+        self.display_task_category("Future Tasks", categorized_tasks["future"], "#66ff66")  # Green
+
+        # Bar Graph for Task Completion
+        self.create_task_completion_graph(open_tasks, closed_tasks)
         # Display task summary
         ctk.CTkLabel(
             self.main_frame,
@@ -153,6 +165,86 @@ class ProductivityApp(ctk.CTk):
                 font=ctk.CTkFont(size=14),
                 text_color="light gray"
             ).pack(pady=5)
+
+    # Function to create a bar graph
+    def create_task_completion_graph(self, open_tasks, closed_tasks):
+        fig = plt.Figure(figsize=(4, 2), dpi=100)
+        ax = fig.add_subplot(111)
+
+        # Data for the bar graph
+        categories = ['Pending', 'Completed']
+        values = [open_tasks, closed_tasks]
+        colors = ['#66b3ff', '#99ff99']
+
+        # Plot bar graph
+        ax.bar(categories, values, color=colors)
+        ax.set_title('Task Completion Status', fontsize=14)
+        ax.set_ylabel('Number of Tasks', fontsize=10)
+
+        # Embed graph in the dashboard
+        canvas = FigureCanvasTkAgg(fig, self.main_frame)
+        canvas.get_tk_widget().pack(pady=20)
+
+    # Function to display categorized tasks
+    def display_task_category(self, category_name, tasks, color):
+        if not tasks:
+            return
+
+        # Create a section for the category
+        section_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color=color)
+        section_frame.pack(fill="x", pady=10, padx=20)
+
+        # Add header
+        header_label = ctk.CTkLabel(
+            section_frame,
+            text=category_name,
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color="black"
+        )
+        header_label.pack(side="left", padx=10)
+
+        # Add each task in this category
+        for task_name, class_name, deadline in tasks:
+            task_frame = ctk.CTkFrame(section_frame, corner_radius=5, fg_color="#262667")
+            task_frame.pack(fill="x", pady=5, padx=10)
+
+            task_label = ctk.CTkLabel(
+                task_frame,
+                text=f"{task_name} ({class_name}) - Due: {deadline}",
+                font=ctk.CTkFont(size=14),
+                text_color="white"
+            )
+            task_label.pack(side="left", padx=10)
+
+            # Mark complete button
+            mark_complete_button = ctk.CTkButton(
+                task_frame,
+                text="✔",
+                width=30,
+                fg_color="#1a1b4b",
+                hover_color="#2a2b6b",
+                command=lambda t=task_name, c=class_name: self.complete_task(c, t)
+            )
+            mark_complete_button.pack(side="right", padx=10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def display_class(self, class_name):
         # Create a frame for the class
