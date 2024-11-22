@@ -166,6 +166,7 @@ class ProductivityApp(ctk.CTk):
         delete_button.pack(side="right", padx=5)
 
     def load_to_do_list(self):
+        """Load the To-Do List screen."""
         self.update_main_content("To Do List")
 
         # Add a button to create new classes
@@ -180,9 +181,50 @@ class ProductivityApp(ctk.CTk):
         )
         add_class_button.pack(pady=10)
 
-        # Display all classes
-        for class_name in self.task_manager.tasks.keys():  # Use .keys() to iterate over class names
+        # Display all classes and tasks
+        for class_name in self.task_manager.tasks.keys():
             self.display_class(class_name)
+
+        # Display recently completed tasks
+        self.display_recently_completed_tasks()
+
+    def display_recently_completed_tasks(self):
+        """Display the 'Recently Completed Tasks' section."""
+        recently_completed_tasks = self.task_manager.get_recently_completed_tasks()
+        if recently_completed_tasks:  # Check if there are completed tasks
+            # Create a frame for recently completed tasks
+            completed_frame = ctk.CTkFrame(
+                self.main_frame, fg_color="#262667", corner_radius=15
+            )
+            completed_frame.pack(fill="x", pady=100, padx=20)
+
+            # Add a header label for the section
+            completed_label = ctk.CTkLabel(
+                completed_frame,
+                text="Recently Completed Tasks",
+                font=ctk.CTkFont(size=20, weight="bold"),
+                text_color="white",
+            )
+            completed_label.pack(pady=10)
+
+            # Add each completed task to the frame
+            for task in recently_completed_tasks:
+                task_label = ctk.CTkLabel(
+                    completed_frame,
+                    text=f"{task['class_name']}: {task['task_name']}",
+                    font=ctk.CTkFont(size=16),
+                    text_color="white",
+                )
+                task_label.pack(pady=2)
+        else:
+            # Add a placeholder message if no completed tasks
+            no_tasks_label = ctk.CTkLabel(
+                self.main_frame,
+                text="No recently completed tasks.",
+                font=ctk.CTkFont(size=16),
+                text_color="light gray",
+            )
+            no_tasks_label.pack(pady=10, padx=20)
 
     def toggle_tasks(self, class_frame, class_name):
         # Remove existing task frames if already displayed
@@ -245,9 +287,13 @@ class ProductivityApp(ctk.CTk):
         )
         confirm_button.pack(pady=20)
 
+    # def complete_task(self, class_name, task_name):
+    #     if self.task_manager.remove_task(class_name, task_name):  # Remove the task from the backend
+    #         self.load_to_do_list()  # Refresh the UI to reflect the change
     def complete_task(self, class_name, task_name):
-        if self.task_manager.remove_task(class_name, task_name):  # Remove the task from the backend
-            self.load_to_do_list()  # Refresh the UI to reflect the change
+        """Mark a task as completed and refresh the UI."""
+        if self.task_manager.complete_task(class_name, task_name):  # Use the correct method
+            self.load_to_do_list()  # Refresh the To-Do List UI dynamically
 
     def add_class_ui(self):
         # Popup or dropdown UI for adding a new class
