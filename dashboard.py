@@ -129,7 +129,30 @@ class ProductivityApp(ctk.CTk):
             text_color="light gray"
         ).pack(pady=10)
 
-        # Additional Dashboard content...
+        # Fetch and display Action Items
+        ctk.CTkLabel(
+            self.main_frame,
+            text="Action Items",
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color="white"
+        ).pack(pady=20)
+
+        action_items = self.task_manager.get_action_items()
+        if action_items:
+            for task_name, class_name, deadline in action_items:
+                ctk.CTkLabel(
+                    self.main_frame,
+                    text=f"{task_name} ({class_name}) - Due: {deadline}",
+                    font=ctk.CTkFont(size=14),
+                    text_color="light gray"
+                ).pack(pady=5)
+        else:
+            ctk.CTkLabel(
+                self.main_frame,
+                text="No urgent tasks!",
+                font=ctk.CTkFont(size=14),
+                text_color="light gray"
+            ).pack(pady=5)
 
     def display_class(self, class_name):
         # Create a frame for the class
