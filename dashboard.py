@@ -25,8 +25,8 @@ class ProductivityApp(ctk.CTk):
         self.title("Productivity App")
         self.configure(fg_color="#0b0b38")
         self.task_manager = TaskManager()
-        print("\nTask List:")
-        pprint(dict(self.task_manager.tasks), indent=4)
+        #print("\nTask List:")
+        #pprint(dict(self.task_manager.tasks), indent=4)
 
         self.points = 0  # Initialize points
 
@@ -49,11 +49,7 @@ class ProductivityApp(ctk.CTk):
         self.sidebar_buttons = [
             ("Dashboard", self.load_dashboard, self.icons[0]),
             ("To Do List", self.load_to_do_list, self.icons[1]),
-            ("Habit Tracker", self.load_habit_tracker, self.icons[2]),
-            ("Notifications", self.load_notifications, self.icons[3]),
-            ("Progress Tracker", self.load_progress_tracker, self.icons[4]),
             ("Settings", self.load_settings, self.icons[5]),
-            ("Chatbot", self.load_chatbot, self.icons[6]),  # New "Chatbot" button
         ]
         # Add App Logo at the top of the sidebar
         app_logo = ctk.CTkImage(Image.open("icons/app_logo.png"), size=(275, 125))  # Resize the logo
@@ -261,21 +257,14 @@ class ProductivityApp(ctk.CTk):
             self.task_manager.add_class(class_name)
             self.load_to_do_list()  # Refresh the To-Do List
 
-    def load_habit_tracker(self):
-        """Load the habit tracker interface."""
-        self.update_main_content("Habit Tracker")
 
-    def load_notifications(self):
-        self.update_main_content("Notifications")
 
-    def load_progress_tracker(self):
-        self.update_main_content("Progress Tracker")
+
 
     def load_settings(self):
         self.update_main_content("Settings")
 
-    def load_chatbot(self):
-        self.update_main_content("Chatbot")  # Placeholder for chatbot functionality
+
 
     def update_main_content(self, content):
         for widget in self.main_frame.winfo_children():
