@@ -36,7 +36,10 @@ class CustomMap:
 
     def save(self):
         """Save the map to a file using pickle."""
-        serializable_map = {key: node.to_list() for key, node in self.map.items()}
+        serializable_map = {
+            key: node.to_list() if isinstance(node, LinkedList) else []
+            for key, node in self.map.items()
+        }
         with open(self.file_path, "wb") as file:
             pickle.dump(serializable_map, file)
 
@@ -45,7 +48,10 @@ class CustomMap:
         try:
             with open(self.file_path, "rb") as file:
                 serializable_map = pickle.load(file)
-            self.map = {key: LinkedList().from_list(values) for key, values in serializable_map.items()}
+            self.map = {
+                key: LinkedList().from_list(values) if values else LinkedList()
+                for key, values in serializable_map.items()
+            }
         except (FileNotFoundError, EOFError):
             self.map = {}
 
@@ -55,7 +61,10 @@ class CustomMap:
 
     def items(self):
         """Return the items of the map as (key, list) tuples."""
-        return {key: node.to_list() for key, node in self.map.items()}.items()
+        return {
+            key: node.to_list() if isinstance(node, LinkedList) else []
+            for key, node in self.map.items()
+        }.items()
 
     def __iter__(self):
         """Allow iteration over the keys of the map."""
