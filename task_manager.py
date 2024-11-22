@@ -4,7 +4,7 @@ import heapq
 import pickle
 from custom_map import CustomMap
 from stack import Stack
-
+import numpy as np
 
 class TaskManager:
     def __init__(self, file_path="tasks.pkl", completed_tasks_file="completed_tasks.pkl"):
@@ -19,10 +19,13 @@ class TaskManager:
     def get_task_counts(self):
         """Calculate total open and closed tasks."""
         open_tasks = 0
-        closed_tasks = len(self.completed_tasks.to_list())
+        closed_tasks = len(self.completed_tasks.to_list())  # Length of stack converted to list
+
         for class_name, tasks in self.tasks.items():
-            open_tasks += len(tasks)
-        return array.array('i', [open_tasks, closed_tasks])
+            open_tasks += len(tasks)  # Count tasks per class
+
+        # Use a NumPy array to create a 2D structure
+        return np.array([[1, open_tasks], [2, closed_tasks]])  # 1 for open tasks, 2 for closed tasks
 
     def add_class(self, class_name):
         if class_name not in self.tasks.keys():

@@ -112,7 +112,7 @@ class ProductivityApp(ctk.CTk):
 
         # Fetch task counts
         task_counts = self.task_manager.get_task_counts()
-        open_tasks, closed_tasks = task_counts[0], task_counts[1]
+        open_tasks, closed_tasks = task_counts[0][1], task_counts[1][1]
 
         # Display task summary
         ctk.CTkLabel(
