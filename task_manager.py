@@ -1,11 +1,14 @@
+import pickle
 from custom_map import CustomMap
 from stack import Stack
 
 class TaskManager:
-    def __init__(self, file_path="tasks.pkl"):
+    def __init__(self, file_path="tasks.pkl", completed_tasks_file="completed_tasks.pkl"):
         self.tasks = CustomMap(file_path)
         self.tasks.load()
-        self.completed_tasks = Stack()  # Stack for recently completed tasks
+        self.completed_tasks = Stack()
+        self.completed_tasks_file = completed_tasks_file
+        self.completed_tasks.load_from_file(self.completed_tasks_file)  # Load completed tasks
 
     def add_class(self, class_name):
         if class_name not in self.tasks.keys():  # Check if the class exists
@@ -33,6 +36,7 @@ class TaskManager:
             self.tasks.remove_value(class_name, task_to_complete)
             task_to_complete["completed"] = True  # Mark as completed
             self.completed_tasks.push({"class_name": class_name, "task_name": task_name})  # Push to stack
+            self.completed_tasks.save_to_file(self.completed_tasks_file)  # Save recently completed tasks
 
             # Ensure the subject persists even if no tasks remain
             if not self.tasks.get(class_name):
@@ -41,6 +45,20 @@ class TaskManager:
 
         return False  # Task not found
 
+    def delete_class(self, class_name):
+        """Delete a class (subject) and all its tasks."""
+        self.tasks.remove(class_name)
+
     def get_recently_completed_tasks(self):
         """Return a list of recently completed tasks."""
         return self.completed_tasks.to_list()
+
+    def save_all(self):
+        """Save all data, including tasks and recently completed tasks."""
+        self.tasks.save()
+        self.completed_tasks.save_to_file(self.completed_tasks_file)
+
+    def load_all(self):
+        """Load all data, including tasks and recently completed tasks."""
+        self.tasks.load()
+        self.completed_tasks.load_from_file(self.completed_tasks_file)
