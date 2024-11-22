@@ -55,9 +55,18 @@ class ProductivityApp(ctk.CTk):
             ("Settings", self.load_settings, self.icons[5]),
         ]
         # Add App Logo at the top of the sidebar
-        app_logo = ctk.CTkImage(Image.open("icons/app_logo.png"), size=(275, 125))  # Resize the logo
+        app_logo = ctk.CTkImage(Image.open("icons/app_logo.png"), size=(210, 210))  # Resize the logo
         logo_label = ctk.CTkLabel(self.sidebar, image=app_logo, text="")  # Add label with the logo
         logo_label.grid(row=0, column=0, pady=(20, 10), sticky="n")  # Add some padding above the logo
+
+        # Add a white title text label under the logo
+        logo_title = ctk.CTkLabel(
+            self.sidebar,
+            text="Productivity App",
+            font=ctk.CTkFont(size=30, weight="bold"),
+            text_color="white"  # Set text color to white
+        )
+        logo_title.grid(row=1, column=0, pady=(0, 20), sticky="n")  # Add spacing below the title
 
         for idx, (name, command, icon) in enumerate(self.sidebar_buttons):
             button = ctk.CTkButton(
@@ -150,6 +159,9 @@ class ProductivityApp(ctk.CTk):
         self.create_task_completion_graph(open_tasks, closed_tasks, graph_frame)
 
     def create_task_category_box(self, title, tasks, color, parent_frame):
+        # Adjust color for a translucent effect (darker shade)
+        color = self.get_translucent_color(color, opacity=0.6)
+
         # Create the category frame
         category_frame = ctk.CTkFrame(parent_frame, fg_color=color, corner_radius=15)
         category_frame.pack(side="left", fill="both", expand=True, padx=10, pady=5)
@@ -159,20 +171,25 @@ class ProductivityApp(ctk.CTk):
             category_frame,
             text=title,
             font=ctk.CTkFont(size=20, weight="bold"),
-            text_color="black"
+            text_color="white"
         )
         title_label.pack(pady=10)
 
-        # Add tasks to the category box
+        # Add tasks with checkboxes
         if tasks:
             for task_name, class_name, deadline in tasks:
-                task_label = ctk.CTkLabel(
-                    category_frame,
+                task_frame = ctk.CTkFrame(category_frame, fg_color=color, corner_radius=10)
+                task_frame.pack(fill="x", pady=2, padx=10)
+
+                # Add a checkbox for the task
+                checkbox = ctk.CTkCheckBox(
+                    task_frame,
                     text=f"{task_name} ({class_name}) - Due: {deadline}",
                     font=ctk.CTkFont(size=14),
-                    text_color="white"
+                    text_color="white",
+                    command=lambda t=task_name, c=class_name: self.tick_off_task(c, t)
                 )
-                task_label.pack(pady=5)
+                checkbox.pack(side="left", padx=5)
         else:
             no_task_label = ctk.CTkLabel(
                 category_frame,
@@ -220,14 +237,27 @@ class ProductivityApp(ctk.CTk):
 
     def create_task_completion_graph(self, open_tasks, closed_tasks, parent_frame):
         # Create bar graph
-        fig = plt.Figure(figsize=(4, 2), dpi=100)
+        fig = plt.Figure(figsize=(4, 2), dpi=100, facecolor="#262667")  # Set background color to match GUI
         ax = fig.add_subplot(111)
+
+        # Data
         categories = ['Pending', 'Completed']
         values = [open_tasks, closed_tasks]
-        colors = ['#66b3ff', '#99ff99']
+        colors = ['#262667', '#262667']
+
+        # Plot bar graph
         ax.bar(categories, values, color=colors)
-        ax.set_title('Task Completion Status', fontsize=14)
-        ax.set_ylabel('Number of Tasks', fontsize=10)
+        ax.set_title('Task Completion Status', fontsize=14, color="white")  # White text for title
+        ax.set_ylabel('Number of Tasks', fontsize=12, color="white")  # White text for axis label
+        ax.set_facecolor("#13134a")  # Match the background of the GUI
+        ax.tick_params(axis='x', colors="white")  # White text for x-axis ticks
+        ax.tick_params(axis='y', colors="white")  # White text for y-axis ticks
+
+        # Remove top and right borders for a cleaner look
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_color("white")  # White border for left axis
+        ax.spines['bottom'].set_color("white")  # White border for bottom axis
 
         # Embed graph into frame
         canvas = FigureCanvasTkAgg(fig, parent_frame)
@@ -567,6 +597,38 @@ class ProductivityApp(ctk.CTk):
                 text_color="light gray"
             )
             no_action_label.pack(pady=10)
+
+    def get_translucent_color(self, hex_color, opacity=0.7):
+        """
+        Adjust the given hex color to simulate transparency by blending with a dark background.
+        :param hex_color: The hex color code (e.g., '#ff6666').
+        :param opacity: Opacity level (0.0 to 1.0).
+        :return: Adjusted hex color.
+        """
+        # Ensure valid opacity range
+        opacity = max(0.0, min(1.0, opacity))
+
+        # Parse the hex color
+        r = int(hex_color[1:3], 16)
+        g = int(hex_color[3:5], 16)
+        b = int(hex_color[5:7], 16)
+
+        # Background color (dark)
+        bg_r, bg_g, bg_b = 19, 19, 74  # #13134a in RGB
+
+        # Blend with the background
+        r = int((1 - opacity) * bg_r + opacity * r)
+        g = int((1 - opacity) * bg_g + opacity * g)
+        b = int((1 - opacity) * bg_b + opacity * b)
+
+        # Return the blended color as hex
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def tick_off_task(self, class_name, task_name):
+        """Mark a task as completed when ticked and refresh the dashboard."""
+        if self.task_manager.complete_task(class_name, task_name):
+            # Refresh the dashboard to remove completed task from category
+            self.load_dashboard()
 if __name__ == "__main__":
     app = ProductivityApp()
     app.mainloop()
