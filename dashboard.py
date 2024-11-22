@@ -115,126 +115,123 @@ class ProductivityApp(ctk.CTk):
 
         # Fetch task counts
         task_counts = self.task_manager.get_task_counts()
-        open_tasks, closed_tasks = task_counts[0][1], task_counts[1][1]
+        open_tasks, closed_tasks = task_counts[0][1], task_counts[1][1]  # Extract open and closed tasks
 
-
-        # Task Categories
+        # Fetch categorized tasks
         categorized_tasks = self.task_manager.categorize_tasks()
-        self.display_task_category("Overdue Tasks", categorized_tasks["overdue"], "#ff6666")  # Red
-        self.display_task_category("Today's Tasks", categorized_tasks["today"], "#ffff66")  # Yellow
-        self.display_task_category("Future Tasks", categorized_tasks["future"], "#66ff66")  # Green
 
-        # Bar Graph for Task Completion
-        self.create_task_completion_graph(open_tasks, closed_tasks)
-        # Display task summary
-        ctk.CTkLabel(
-            self.main_frame,
-            text=f"Total Open Tasks: {open_tasks}",
-            font=ctk.CTkFont(size=16),
-            text_color="light gray"
-        ).pack(pady=10)
+        # Fetch action items
+        action_items = self.task_manager.get_action_items()
 
-        ctk.CTkLabel(
-            self.main_frame,
-            text=f"Total Closed Tasks: {closed_tasks}",
-            font=ctk.CTkFont(size=16),
-            text_color="light gray"
-        ).pack(pady=10)
+        # Create a container frame for the layout
+        layout_frame = ctk.CTkFrame(self.main_frame, fg_color="#13134a")
+        layout_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Fetch and display Action Items
-        ctk.CTkLabel(
+        # First row: Task categories (Overdue, Today's, Future)
+        task_row_frame = ctk.CTkFrame(layout_frame, fg_color="#13134a")
+        task_row_frame.pack(fill="x", pady=10)
+
+        self.create_task_category_box("Overdue Tasks", categorized_tasks["overdue"], "#ff6666", task_row_frame)
+        self.create_task_category_box("Today's Tasks", categorized_tasks["today"], "#ffff66", task_row_frame)
+        self.create_task_category_box("Future Tasks", categorized_tasks["future"], "#66ff66", task_row_frame)
+
+        # Second row: Action Items and Graph
+        second_row_frame = ctk.CTkFrame(layout_frame, fg_color="#13134a")
+        second_row_frame.pack(fill="both", expand=True, pady=10)
+
+        action_items_frame = ctk.CTkFrame(second_row_frame, fg_color="#262667", corner_radius=15)
+        action_items_frame.pack(side="left", fill="both", expand=True, padx=10)
+
+        graph_frame = ctk.CTkFrame(second_row_frame, fg_color="#262667", corner_radius=15)
+        graph_frame.pack(side="right", fill="both", expand=True, padx=10)
+
+        # Populate the action items box and graph
+        self.populate_action_items_box(action_items, action_items_frame)
+        self.create_task_completion_graph(open_tasks, closed_tasks, graph_frame)
+
+    def create_task_category_box(self, title, tasks, color, parent_frame):
+        # Create the category frame
+        category_frame = ctk.CTkFrame(parent_frame, fg_color=color, corner_radius=15)
+        category_frame.pack(side="left", fill="both", expand=True, padx=10, pady=5)
+
+        # Add category title
+        title_label = ctk.CTkLabel(
+            category_frame,
+            text=title,
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color="black"
+        )
+        title_label.pack(pady=10)
+
+        # Add tasks to the category box
+        if tasks:
+            for task_name, class_name, deadline in tasks:
+                task_label = ctk.CTkLabel(
+                    category_frame,
+                    text=f"{task_name} ({class_name}) - Due: {deadline}",
+                    font=ctk.CTkFont(size=14),
+                    text_color="white"
+                )
+                task_label.pack(pady=5)
+        else:
+            no_task_label = ctk.CTkLabel(
+                category_frame,
+                text="No tasks",
+                font=ctk.CTkFont(size=14),
+                text_color="black"
+            )
+            no_task_label.pack(pady=10)
+
+    def create_action_items_box(self, action_items, row, column):
+        action_frame = ctk.CTkFrame(
             self.main_frame,
+            fg_color="#262667",
+            corner_radius=15,
+        )
+        action_frame.grid(row=row, column=column, padx=10, pady=10, sticky="nsew")
+
+        # Add title
+        title_label = ctk.CTkLabel(
+            action_frame,
             text="Action Items",
             font=ctk.CTkFont(size=20, weight="bold"),
             text_color="white"
-        ).pack(pady=20)
+        )
+        title_label.pack(pady=10)
 
-        action_items = self.task_manager.get_action_items()
+        # Add action items
         if action_items:
             for task_name, class_name, deadline in action_items:
-                ctk.CTkLabel(
-                    self.main_frame,
+                action_label = ctk.CTkLabel(
+                    action_frame,
                     text=f"{task_name} ({class_name}) - Due: {deadline}",
                     font=ctk.CTkFont(size=14),
                     text_color="light gray"
-                ).pack(pady=5)
+                )
+                action_label.pack(pady=5)
         else:
-            ctk.CTkLabel(
-                self.main_frame,
-                text="No urgent tasks!",
+            no_action_label = ctk.CTkLabel(
+                action_frame,
+                text="No urgent tasks",
                 font=ctk.CTkFont(size=14),
                 text_color="light gray"
-            ).pack(pady=5)
+            )
+            no_action_label.pack(pady=10)
 
-    # Function to create a bar graph
-    def create_task_completion_graph(self, open_tasks, closed_tasks):
+    def create_task_completion_graph(self, open_tasks, closed_tasks, parent_frame):
+        # Create bar graph
         fig = plt.Figure(figsize=(4, 2), dpi=100)
         ax = fig.add_subplot(111)
-
-        # Data for the bar graph
         categories = ['Pending', 'Completed']
         values = [open_tasks, closed_tasks]
         colors = ['#66b3ff', '#99ff99']
-
-        # Plot bar graph
         ax.bar(categories, values, color=colors)
         ax.set_title('Task Completion Status', fontsize=14)
         ax.set_ylabel('Number of Tasks', fontsize=10)
 
-        # Embed graph in the dashboard
-        canvas = FigureCanvasTkAgg(fig, self.main_frame)
-        canvas.get_tk_widget().pack(pady=20)
-
-    # Function to display categorized tasks
-    def display_task_category(self, category_name, tasks, color):
-        if not tasks:
-            return
-
-        # Create a section for the category
-        section_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color=color)
-        section_frame.pack(fill="x", pady=10, padx=20)
-
-        # Add header
-        header_label = ctk.CTkLabel(
-            section_frame,
-            text=category_name,
-            font=ctk.CTkFont(size=20, weight="bold"),
-            text_color="black"
-        )
-        header_label.pack(side="left", padx=10)
-
-        # Add each task in this category
-        for task_name, class_name, deadline in tasks:
-            task_frame = ctk.CTkFrame(section_frame, corner_radius=5, fg_color="#262667")
-            task_frame.pack(fill="x", pady=5, padx=10)
-
-            task_label = ctk.CTkLabel(
-                task_frame,
-                text=f"{task_name} ({class_name}) - Due: {deadline}",
-                font=ctk.CTkFont(size=14),
-                text_color="white"
-            )
-            task_label.pack(side="left", padx=10)
-
-            # Mark complete button
-            mark_complete_button = ctk.CTkButton(
-                task_frame,
-                text="✔",
-                width=30,
-                fg_color="#1a1b4b",
-                hover_color="#2a2b6b",
-                command=lambda t=task_name, c=class_name: self.complete_task(c, t)
-            )
-            mark_complete_button.pack(side="right", padx=10)
-
-
-
-
-
-
-
-
-
+        # Embed graph into frame
+        canvas = FigureCanvasTkAgg(fig, parent_frame)
+        canvas.get_tk_widget().pack(fill="both", expand=True, pady=10)
 
 
 
@@ -542,6 +539,34 @@ class ProductivityApp(ctk.CTk):
                                        fg_color="#2a2b6b", hover_color="#333399", font=ctk.CTkFont(size=16))
         confirm_button.pack(pady=20, padx=20)
 
+    def populate_action_items_box(self, action_items, parent_frame):
+        # Add title
+        title_label = ctk.CTkLabel(
+            parent_frame,
+            text="Action Items",
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color="white"
+        )
+        title_label.pack(pady=10)
+
+        # Add action items
+        if action_items:
+            for task_name, class_name, deadline in action_items:
+                action_label = ctk.CTkLabel(
+                    parent_frame,
+                    text=f"{task_name} ({class_name}) - Due: {deadline}",
+                    font=ctk.CTkFont(size=14),
+                    text_color="light gray"
+                )
+                action_label.pack(pady=5)
+        else:
+            no_action_label = ctk.CTkLabel(
+                parent_frame,
+                text="No urgent tasks",
+                font=ctk.CTkFont(size=14),
+                text_color="light gray"
+            )
+            no_action_label.pack(pady=10)
 if __name__ == "__main__":
     app = ProductivityApp()
     app.mainloop()
