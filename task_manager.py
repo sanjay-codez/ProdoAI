@@ -1,3 +1,4 @@
+import array
 import pickle
 from custom_map import CustomMap
 from stack import Stack
@@ -10,6 +11,15 @@ class TaskManager:
         self.completed_tasks = Stack()
         self.completed_tasks_file = completed_tasks_file
         self.completed_tasks.load_from_file(self.completed_tasks_file)
+
+    def get_task_counts(self):
+        """Calculate total open and closed tasks."""
+        open_tasks = 0
+        closed_tasks = len(self.completed_tasks.to_list())
+        for class_name, tasks in self.tasks.items():
+            open_tasks += len(tasks)
+        return array.array('i', [open_tasks, closed_tasks])
+
 
     def add_class(self, class_name):
         if class_name not in self.tasks.keys():

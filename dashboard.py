@@ -109,14 +109,27 @@ class ProductivityApp(ctk.CTk):
     # Sidebar Button Commands
     def load_dashboard(self):
         self.update_main_content("Dashboard")
-        # Add sample text below with smaller font
+
+        # Fetch task counts
+        task_counts = self.task_manager.get_task_counts()
+        open_tasks, closed_tasks = task_counts[0], task_counts[1]
+
+        # Display task summary
         ctk.CTkLabel(
             self.main_frame,
-            text="This is sample text",
-            font=ctk.CTkFont(size=14),  # Smaller font size
-            text_color="light gray",  # Slightly different color for hierarchy
-            wraplength=600  # Wrap text at 600 pixels
+            text=f"Total Open Tasks: {open_tasks}",
+            font=ctk.CTkFont(size=16),
+            text_color="light gray"
         ).pack(pady=10)
+
+        ctk.CTkLabel(
+            self.main_frame,
+            text=f"Total Closed Tasks: {closed_tasks}",
+            font=ctk.CTkFont(size=16),
+            text_color="light gray"
+        ).pack(pady=10)
+
+        # Additional Dashboard content...
 
     def display_class(self, class_name):
         # Create a frame for the class
