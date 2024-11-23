@@ -97,10 +97,11 @@ python dashboard.py
 ## Requirements
 
 ```plaintext
-customtkinter==5.1.3
-Pillow==8.2.0
-tkcalendar==1.6.1
-matplotlib==3.3.4
-openai==0.27.0
-numpy==1.20.1
+customtkinter~=5.2.2
+matplotlib~=3.8.2
+openai~=0.27.10
+Pillow~=10.1.0
+tkcalendar~=1.6.1
+DateTime~=5.5
+numpy~=1.26.2
 ```
