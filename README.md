@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/your-username/productivity-dashboard.git
+git clone https://github.com/sanjay-codez/ProductivityApp.git
 cd productivity-dashboard
 ```
 
