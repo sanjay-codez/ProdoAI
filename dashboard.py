@@ -12,6 +12,15 @@ import array
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
+import openai
+import json
+from datetime import datetime
+import customtkinter as ctk
+import tkinter as tk
+
+# File to store chat history
+CHAT_HISTORY_FILE = "chat_history.json"
 
 
 import matplotlib.pyplot as plt
@@ -28,10 +37,8 @@ class ProductivityApp(ctk.CTk):
         self.title("Productivity App")
         self.configure(fg_color="#0b0b38")
         self.task_manager = TaskManager()
-        #print("\nTask List:")
-        #pprint(dict(self.task_manager.tasks), indent=4)
 
-        self.points = 0  # Initialize points
+        self.api_key = None  # API key for ChatGPT
 
         self.after(0, lambda: self.state('zoomed'))  # Start in a maximized window
 
@@ -39,6 +46,8 @@ class ProductivityApp(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, minsize=300)  # Sidebar width explicitly set
         self.grid_columnconfigure(1, weight=1)     # Main content area
+
+        #self.load_chatbot()
 
         # Load icons from the specified path
         self.icons = [self.load_icon(f"icons/{i}.png") for i in range(1, 8)]  # Update to include icon for Chatbot
@@ -462,19 +471,136 @@ class ProductivityApp(ctk.CTk):
 
 
     def load_chatbot(self):
+        """Load the chatbot interface."""
         self.update_main_content("Chat")
 
+        # API Key Entry
+        api_key_frame = ctk.CTkFrame(self.main_frame, fg_color="#13134a", corner_radius=15)
+        api_key_frame.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(api_key_frame, text="API Key:", text_color="white").pack(side="left", padx=10)
+        self.api_key_entry = ctk.CTkEntry(api_key_frame, show="*", placeholder_text="Enter API Key")
+        self.api_key_entry.pack(side="left", fill="x", expand=True, padx=10)
+        ctk.CTkButton(api_key_frame, text="Set Key", command=self.set_api_key).pack(side="left", padx=10)
 
+        # Create a parent frame for chat history (ensures control over layout)
+        chat_frame_container = ctk.CTkFrame(self.main_frame, fg_color="#1a1b4b", corner_radius=15)
+        chat_frame_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Disable propagation to control height manually
+        chat_frame_container.pack_propagate(False)
+
+        # Chat History (Text Widget for Selectable Content)
+        self.chat_text = tk.Text(
+            chat_frame_container,
+            wrap="word",
+            state="disabled",
+            bg="#1a1b4b",
+            fg="white",
+            font=("Arial", 12),
+            height=300
+        )
+        self.chat_text.pack(fill="both", expand=True, padx=10, pady=10)  # Fills the container
+
+        # Scrollbar for Chat History
+        scrollbar = tk.Scrollbar(self.chat_text, command=self.chat_text.yview)
+        self.chat_text.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+
+        # Message Input Frame
+        message_frame = ctk.CTkFrame(self.main_frame, fg_color="#13134a", corner_radius=15)
+        message_frame.pack(fill="x", padx=10, pady=10)  # Use pack instead of grid
+
+        # Message Entry
+        self.message_entry = ctk.CTkEntry(message_frame, placeholder_text="Type your message here...")
+        self.message_entry.pack(side="left", fill="x", expand=True, padx=10)
+
+        # Send Button
+        ctk.CTkButton(message_frame, text="Send", command=self.send_message).pack(side="left", padx=10)
+
+        # Load existing chat history
+        self.load_chat_history()
+
+    def set_api_key(self):
+        """Set the API key from the input field."""
+        self.api_key = self.api_key_entry.get()
+        if not self.api_key:
+            self.display_message("System", "API key is required to use the chatbot.")
+
+    def send_message(self):
+        """Send a message to the ChatGPT API and display the response."""
+        if not self.api_key:
+            self.display_message("System", "Please enter an API key first.")
+            return
+
+        user_message = self.message_entry.get()
+        if not user_message.strip():
+            return  # Ignore empty messages
+
+        # Display user's message
+        self.display_message("You", user_message)
+        self.message_entry.delete(0, "end")
+
+        # Send the message to ChatGPT
+        try:
+            openai.api_key = self.api_key
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": user_message}],
+            )
+            bot_message = response.choices[0].message.content.strip()
+            self.display_message("ChatGPT", bot_message)
+
+            # Save chat to history
+            self.save_chat_to_history("You", user_message)
+            self.save_chat_to_history("ChatGPT", bot_message)
+        except Exception as e:
+            self.display_message("System", f"Error: {str(e)}")
+
+    def display_message(self, sender, message):
+        """Display a message in the chat frame."""
+        self.chat_text.configure(state="normal")  # Enable text widget for editing
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.chat_text.insert("end", f"{sender} [{timestamp}]: {message}\n\n")
+        self.chat_text.configure(state="disabled")  # Set back to read-only
+        self.chat_text.see("end")  # Scroll to the latest message
+
+    def save_chat_to_history(self, sender, message):
+        """Save a message to the chat history file."""
+        chat_entry = {"sender": sender, "message": message, "timestamp": str(datetime.now())}
+        try:
+            if os.path.exists(CHAT_HISTORY_FILE):
+                with open(CHAT_HISTORY_FILE, "r") as file:
+                    history = json.load(file)
+            else:
+                history = []
+
+            history.append(chat_entry)
+            with open(CHAT_HISTORY_FILE, "w") as file:
+                json.dump(history, file, indent=4)
+        except Exception as e:
+            print(f"Error saving chat history: {str(e)}")
+
+    def load_chat_history(self):
+        """Load chat history from the file."""
+        if os.path.exists(CHAT_HISTORY_FILE):
+            try:
+                with open(CHAT_HISTORY_FILE, "r") as file:
+                    history = json.load(file)
+                    for entry in history:
+                        self.display_message(entry["sender"], entry["message"])
+            except Exception as e:
+                print(f"Error loading chat history: {str(e)}")
 
     def update_main_content(self, content):
+        """Clear the main frame and set the header."""
         for widget in self.main_frame.winfo_children():
             widget.destroy()
         ctk.CTkLabel(
             self.main_frame,
             text=f"Welcome to {content}!",
-            font=ctk.CTkFont(size=42, weight="bold"),  # Larger size and bold
-            text_color="white"  # White text color
-        ).pack(pady=30)  # Increased padding for better spacing
+            font=ctk.CTkFont(size=42, weight="bold"),
+            text_color="white",
+        ).pack(pady=30)
 
     def delete_class_ui(self, class_name):
         self.task_manager.delete_class(class_name)  # Delete the class from the data structure
