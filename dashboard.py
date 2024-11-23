@@ -52,7 +52,7 @@ class ProductivityApp(ctk.CTk):
         self.sidebar_buttons = [
             ("Dashboard", self.load_dashboard, self.icons[0]),
             ("To Do List", self.load_to_do_list, self.icons[1]),
-            ("Settings", self.load_settings, self.icons[5]),
+            ("Talk with AI", self.load_chatbot, self.icons[5]),
         ]
         # Add App Logo at the top of the sidebar
         app_logo = ctk.CTkImage(Image.open("icons/app_logo.png"), size=(210, 210))  # Resize the logo
@@ -461,8 +461,8 @@ class ProductivityApp(ctk.CTk):
 
 
 
-    def load_settings(self):
-        self.update_main_content("Settings")
+    def load_chatbot(self):
+        self.update_main_content("Chat")
 
 
 
